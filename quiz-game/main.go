@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Problem struct{
@@ -12,8 +14,21 @@ type Problem struct{
 }
 
 func parseData(file *os.File) []*Problem{
+	fileData:= csv.NewReader(file)
+	lines, err:= fileData.ReadAll()
 	
+	if err!=nil{
+		exit(fmt.Sprintf("Could not parse data %s", err))
+	}
+	formattedData:= make([]*Problem,len(lines)) 
+	for i, p:= range lines{
+		formattedData[i] = &Problem{
+			question: p[0],
+			answer: strings.TrimSpace(p[1]),
+		}
+	}
 
+	return formattedData
 }
 
 func openFile(csvFileName *string) *os.File{
@@ -32,6 +47,10 @@ func exit(msg string){
 
 func main(){
 	csvFileName:= flag.String("csv","problems.csv","problem file in csv format")
-	timeLimit:= flag.Int("limit", 20, "time limit in seconds to solve the quiz")
+	//timeLimit:= flag.Int("limit", 20, "time limit in seconds to solve the quiz")
 	flag.Parse()
+
+	file:= openFile(csvFileName)
+	data:= parseData(file)
+	
 }

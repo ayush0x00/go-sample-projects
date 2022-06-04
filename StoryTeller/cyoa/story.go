@@ -15,6 +15,13 @@ func init(){
 }
 
 type Story map[string]Chapter
+type HandlerOptions func(h *handler)
+
+func WithTemplateOption(t *template.Template) HandlerOptions{
+	return func(h *handler) {
+		h.t=t
+	}
+} 
 
 func JsonDecoder(r io.Reader) (Story, error){
 	d:= json.NewDecoder(r)
@@ -38,10 +45,16 @@ type Option struct{
 
 type handler struct{
 	s Story
+	t *template.Template
 }
 
-func NewHandler(s Story) http.Handler{
-	return handler{s}
+func NewHandler(s Story, opts ...HandlerOptions) http.Handler{
+	h:= handler{s,tpl} //default template
+
+	for _, opt:= range opts{
+		opt(&h)
+	}
+	return h
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request){
@@ -53,7 +66,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	path=path[1:]
 
 	if chapter,ok:= h.s[path]; ok{
-		err:= tpl.Execute(w, chapter)
+		err:= h.t.Execute(w, chapter)
 		if err!=nil{
 		log.Fatalf("Error: %s",err)
 		http.Error(w, "Something went wrong...", http.StatusInternalServerError)

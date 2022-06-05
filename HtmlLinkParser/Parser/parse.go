@@ -2,6 +2,7 @@ package parser
 
 import (
 	"io"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -11,7 +12,7 @@ type Link struct{
 	text string
 }
 
-func parse(r io.Reader) ([]Link, error){
+func Parse(r io.Reader) ([]Link, error){
 	doc, err:= html.Parse(r)
 	if err!=nil{
 		return nil,err
@@ -28,7 +29,7 @@ func parse(r io.Reader) ([]Link, error){
 }
 
 func linkNodes(n *html.Node) []*html.Node{
-	if n.Type == html.ElementNode || n.Data=="a"{
+	if n.Type == html.ElementNode && n.Data=="a"{
 		return []*html.Node{n}
 	}
 
@@ -66,5 +67,5 @@ func extractText(n *html.Node) string{
 		ret+= extractText(ch)+" "
 	}
 
-	return ret
+	return strings.Join(strings.Fields(ret)," ")
 }
